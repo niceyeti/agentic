@@ -1,5 +1,19 @@
 # READEMS
 
+This project is a personal intro LangGraph for training. The purpose is to learn
+LangGraph, but primarily it is to understand the operational project structure
+of multi-agent projects as a unit-of-work and the control plane reqs needed to
+secure them. It appears in 2026 that agentic control planes are still
+forthcoming.
+
+Gist:
+- basic multi-agent functionality
+- demonstrated ops (key management, control plane integration)
+- HITL
+- security and attack tree analyses
+
+
+
 References:
 * [flow](https://www.youtube.com/watch?v=C5ealSUWPxY&list=RDC5ealSUWPxY&start_radio=1&pp=ygUUcmFtamFtIHNsb3dlZCByZXZlcmKgBwE%3D)
 
@@ -93,18 +107,3 @@ References:
  . .        .                   )IvIIIII}^=_=||||||+||+||||+||+||+|+||||+|+|+||++||+||||+|||+|+|||+| ||;                            =:;;;;;;;;;;.  
                                _vlII%"":_||||||+||+||+||+|+||+||+|||+|+|+||+||+||+|||+|+||+||+||+||| |||.                          .=;;;;;;:;;;;.  
 ```
-
-
-
-
-This project is a personal intro LangGraph for training. The purpose is to learn
-LangGraph, but primarily it is to understand the operational project structure
-of multi-agent projects as a unit-of-work and the control plane reqs needed to
-secure them. It appears in 2026 that agentic control planes are still
-forthcoming.
-
-Gist:
-- basic multi-agent functionality
-- demonstrated ops (key management, control plane integration)
-- HITL
-- security and attack tree analyses
