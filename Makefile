@@ -4,7 +4,7 @@
 # tracing, HITL feedback, RBAC, etc.
 
 SHELL := /bin/bash
-
+.SHELLFLAGS := -euo pipefail -c
 
 
 # Initializes .venv and installs all deps.
@@ -14,10 +14,20 @@ install:
 	uv sync
 
 
-# There's no reason for this, use 'uv add [pkg]' manually. I often forget uv style.
+# Note: the langchain project seems to be immature and potentially unstable,
+# breaking out packages. This provides for an explicit install for now, but
+# these seem fragile. Note the dash in 'text-splitters'.
+#
+# There's no reason for this, use 'uv add [pkg]' manually. I often forget uv
+# style.
 .PHONY: install-langchain
 install-langchain:
-	uv add langchain langgraph
+	uv add \
+		langchain \
+		langgraph \
+		langchain_community \
+		langchain_openai \
+		langchain-text-splitters
 
 
 .PHONY: unit-tests
@@ -41,6 +51,13 @@ build:
 	docker build -f Dockerfile .
 
 
+# Automagically activates the .venv (default) and runs the app.
+# To show the venv location: 'uv python find'
+.PHONY: run
+run:
+	uv run src/agentic/main.py
+
+
 # Generates project sbom
 .PHONY: sbom
 sbom:
@@ -51,5 +68,5 @@ sbom:
 # width and height correspond with 16:9 ratio
 .PHONY: shiny-metal-ascii
 shiny-metal-ascii:
-	echo "Alllright..."
+	echo "Alllright... since you asked politely."
 	aview -driver stdout -width 250 -height 141 -contrast 0.141732 -gamma 1.979932 .img/bender.pnm > .img/bender.txt
