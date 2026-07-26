@@ -27,7 +27,8 @@ install-langchain:
 		langgraph \
 		langchain_community \
 		langchain_openai \
-		langchain-text-splitters
+		langchain-text-splitters \
+		beautifulsoup4
 
 
 .PHONY: unit-tests
@@ -51,11 +52,18 @@ build:
 	docker build -f Dockerfile .
 
 
-# Automagically activates the .venv (default) and runs the app.
-# To show the venv location: 'uv python find'
+# Automagically activates the .venv (default) and runs the app. To show the venv
+# location: 'uv python find'. The sqlite string is for dev, and ensures the
+# sqlite file is written to memory/temp.
 .PHONY: run
-run:
-	uv run src/agentic/main.py
+run: install
+	mkdir -p /tmp/hotel_db
+	rm -rf /tmp/hotel_db/cornwall_hotels.db
+	touch /tmp/hotel_db/cornwall_hotels.db
+	chmod ugo+rw /tmp/hotel_db/cornwall_hotels.db
+#	SQLITE_URI="sqlite:///tmp/hotel_db/cornwall_hotels.db?mode=memory&cache=shared"
+	SQLITE_URI="sqlite:///:memory:" \
+		uv run src/agentic/main.py
 
 
 # Generates project sbom

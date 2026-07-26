@@ -1,4 +1,3 @@
-import os
 import asyncio
 from typing import Sequence
 
@@ -8,6 +7,9 @@ from langchain_core.vectorstores import VectorStoreRetriever
 
 from langchain_community.document_loaders import AsyncHtmlLoader
 from langchain_community.vectorstores import Chroma
+
+
+from agentic.util.util import load_cred
 
 UK_DESTINATIONS = [
     "Cornwall",
@@ -28,12 +30,14 @@ async def _build_vectorstore(destinations: Sequence[str]) -> Chroma:
     chunks = sum([splitter.split_documents([d]) for d in docs], [])
 
     print(f"Embedding {len(chunks)} chunks ...")
-    vectordb_client = Chroma.from_documents(chunks, embedding=OpenAIEmbeddings())
+    vectordb_client = Chroma.from_documents(
+        chunks, embedding=OpenAIEmbeddings(api_key=load_cred("openai"))
+    )
     print("Vector store ready.\n")
     return vectordb_client
 
 
-# Singleton
+# Singleton. TODO: singletons are a code smell, revise this.
 _ti_vectorstore_client: Chroma | None = None
 
 
@@ -42,8 +46,6 @@ def get_travel_info_vectorstore() -> Chroma:
     # code, but dislike this singleton pattern.
     global _ti_vectorstore_client
     if _ti_vectorstore_client is None:
-        if not os.environ.get("OPENAI_API_KEY"):
-            raise RuntimeError("Set the OPENAI_API_KEY env variable and re-run.")
         _ti_vectorstore_client = asyncio.run(_build_vectorstore(UK_DESTINATIONS))
     return _ti_vectorstore_client
 

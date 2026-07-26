@@ -2,8 +2,13 @@ bender.txt
 sbom.json
 .venv
 
+./hotel_db/*
+**sqlite
 
-
+**.cred
+**.credentials
+**.creds
+**.cred*
 
 ##################### All these taken from a boilerplate python gitignore online ##############
 
