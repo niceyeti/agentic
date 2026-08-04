@@ -2,6 +2,8 @@ bender.txt
 sbom.json
 .venv
 
+**todo.md
+
 ./hotel_db/*
 **sqlite
 

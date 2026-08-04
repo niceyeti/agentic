@@ -1,6 +1,12 @@
 # Description: this all in one file is based on Infante's code from ch.11 of AI
 # Agents and Applications. I am mixed as to whether to define this all in some
 # class, rather than functionally, but it needs encapsulation better than this.
+#
+# TODO: I haven't written robust config injection yet, and may not do so since
+# this was just a demo and self-tutorial. However start by adding config, since
+# this is the usual root of refactoring tasks, i.e. separating construction from
+# execution (as opposed to the current chat_loop function).
+
 
 import os
 import uuid
@@ -12,7 +18,6 @@ from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.tools import tool
-from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain.agents import create_agent
@@ -51,8 +56,57 @@ def get_search_travel_info_tool():
     return search_travel_info
 
 
+"""
+The @tool protocol: the most important part is a concise description by which the llm
+determines when to use the tool. The function name is used as the tool name by default.
+Some options:
+* infer_schema: whether to infer the tool schema from the function args.
+* return_direct: if true, return directly from the tool, rather than continuing the agent loop.
+
+The tools protocol: the tool execution node implements a loop over tools to call,
+getting and appending each ToolsMessage response to the agent messages list.
+* AIMessage's containing a "tool_calls" field trigger the tools to run; this is
+  implemented via a tools_condition edge.
+* Tools respond with ToolMessage containing the response content, name, and
+  tool call id.
+* The generic graph is formed without explicitly defining a ToolsExecutionNode when
+  using the high level wrapper.
+* The generic graph is: _start_ -> llm_node <--> tools
+                                       |
+                                       |--->     _end_
+
+OpenAi Responses API:
+* server maintains server-side conversation state for up to 30 days.
+* agentic loop: many tools can execute server side, i.e. web search, etc.
+* strict function schemas for tool calling
+* input: implements explicit controls and system prompts
+* output: cleanly accessed via output.text
+
+Example:
+
+    from openai import OpenAI
+    client = OpenAI()
+
+    # Turn 1
+    response1 = client.responses.create(
+        model="gpt-5",
+        instructions="You are a helpful assistant.",
+        input="Tell me a joke about a computer."
+    )
+
+    # Turn 2 (Just pass the ID of the last response)
+    response2 = client.responses.create(
+        model="gpt-5",
+        previous_response_id=response1.id,
+        input="Explain why that is funny."
+    )
+    print(response2.output.text)
+
+"""
+
+
 @tool(description="Get the weather forecast, given a town name.")
-def weather_forecast(town: str) -> dict:
+def forecast_weather(town: str) -> dict:
     """Get a mock weather forecast for a given town. Returns a WeatherForecast
     object with weather and temperature."""
     forecast = WeatherForecastService.get_forecast(town)
@@ -62,11 +116,29 @@ def weather_forecast(town: str) -> dict:
     return forecast
 
 
-TOOLS = [get_search_travel_info_tool(), weather_forecast]
+TOOLS = [get_search_travel_info_tool(), forecast_weather]
 
-# FUTURE: use_previous_response_id is for stateful continuation, simply for a
-# demo.
+"""
+Read before using.
+
+Auth: I set this up to read a local api key from a json file at .creds or
+/var/run/secrets/.creds containing an "openai" json-key.
+
+Spending caps: you need to log into OpenAI and navigate to settings,
+organization settings, Limits. Then set a dollar limit and "Enforce Hard Limit"
+to ensure api calls fail once the budget is exceeded.
+
+Logs and traceability: much better traceability is required, using Phoenix or
+control plane features for k8s environments. However OpenAI queries are shown
+in the Logs page. 
+
+FUTURE: use_previous_response_id is for stateful continuation, simply for a
+demo. State is native to llms and can be much more structured; see Lanham's book
+and DAPR-agents for details.
+
+"""
 llm_model = ChatOpenAI(
+    # Alternatively, "gpt-5-nano", "gpt-5-luna", "gpt-5-micro".
     model="gpt-5",
     use_responses_api=True,
     use_previous_response_id=True,
@@ -93,6 +165,34 @@ class AgentTypeOutput(BaseModel):
     agent: AgentType = Field(..., description="Which agent should handle the query?")
 
 
+"""
+Multi-agent router design and implementation: 
+* the router simply forward as explicitly commanded to do so
+* careful prompt engineering is used to scope each agent's role
+* each agent should have clearly defined scope, tools list, and examples of queries it should handle
+* router agents should define explicit criteria for edge cases such as ambiguous
+  queries. Define a default route or request clarification when classification
+  is below a threshold.
+* supervisor agents need visibility into specialist agent capabilities. Provide
+  tool lists and capability descriptions from each specialist agent to the
+  supervisor's planning prompt.
+* pass data between agent's as structured json, not natural language to minimize
+  error.
+* for agent handoffs, current_agent and agent_history fields in your state
+  object monitor which agent handled each step in the workflow.
+* to test router accuracy, create a labeled dataset of queries with correct
+  agent assignments, measure classification accuracy, and adjust routing based
+  on errors. 
+* supervisor vs router:
+    * supervisor is for short-lived workflows, router for longer lived ones.
+    * router execution is multihop and involves iterative delegation
+    * supervisor execution is single-hop with direct dispatch to a specialist
+    * decision making in a supervisor is light quick classification, whereas
+      router implements a high-reasoning controller.
+    * feedback loops: supervisor has no feedback loop, input goes in and the
+      supervisor handles it, and then it is done. The router pattern has a
+      feedback loop, checks the worker output and reassigns it as needed.
+"""
 llm_router = llm_model.with_structured_output(AgentTypeOutput)
 
 
@@ -248,8 +348,11 @@ def chat_loop():
 
     print("UK Travel Assistant (type 'exit' to quit)")
     while True:
+        print(
+            "Each user-input is fresh invocation. Note that each query has taken around 30s to complete."
+        )
         user_input = input("You: ").strip()
-        if user_input.lower() in {"exit", "quit"}:
+        if user_input.lower() in {"exit", "quit", "q"}:
             break
         state = {"messages": [HumanMessage(content=user_input)]}
         try:

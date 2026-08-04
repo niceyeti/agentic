@@ -1,6 +1,6 @@
-# TODO: finish me, this is a placeholder. I don't yet know the operational shape
-# of a langgraph app in terms of possible mounts and secrets, likely lots of
-# injected client tokens or ways to abstract these.
+# TODO: finish me, this is build is a placeholder. I don't yet know the
+# operational shape of a langgraph app in terms of possible mounts and secrets,
+# likely lots of injected client tokens or ways to abstract these.
 
 
 ################################# BUILDER #########################################

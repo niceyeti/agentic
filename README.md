@@ -6,6 +6,14 @@ of multi-agent projects as a unit-of-work and the control plane reqs needed to
 secure them. It appears in 2026 that agentic control planes are still
 forthcoming.
 
+LangGraph is a pretty thin workflow language for agentic apps, though the
+application layer features like vector stores are terrific. However agentic apps
+do ultimately resemble nanoservices, essentially just aggregating llm apis and
+implementing the app requirements of agents. However this agent will probably
+stay pretty simple, since the real meat is in the control plane with which an
+app like this would integrate to provide all of the ilities and CNCF best
+practices: mTLS, A2A comms, secret injection, traceability, and so on.
+
 Gist:
 - basic multi-agent functionality
 - demonstrated ops (key management, control plane integration)
