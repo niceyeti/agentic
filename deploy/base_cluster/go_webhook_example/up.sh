@@ -1,0 +1,3 @@
+#!/bin/sh
+
+tilt up

@@ -1,0 +1,38 @@
+kind: Simple
+apiVersion: k3d.io/v1alpha4
+metadata:
+  name: devcluster
+servers: 1
+agents: 2
+kubeAPI:
+  hostIP: 127.0.0.1
+  hostPort: "6445"
+image: rancher/k3s
+ports:
+- port: 8081:80
+  nodeFilters:
+  - loadbalancer
+options:
+  k3d:
+    wait: true
+    # wait timeout before aborting; same as `--timeout 60s`.
+    # NOTE: this should be around 60s, but startup takes a while when
+    # pulling the k3s image for the first time, or on a slow network.
+    timeout: 8m0s
+    disableLoadbalancer: false
+    disableImageVolume: false
+    disableRollback: false
+  k3s: # options passed on to K3s itself
+    extraArgs: # additional arguments passed to the `k3s server|agent` command; same as `--k3s-arg`
+      - arg: --disable=traefik # disable traefik (when using istio)
+        nodeFilters:
+          - server:*
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true
+  runtime: {}
+registries:
+  create:
+    name: k3d-devregistry
+    host: 127.0.0.1
+    hostPort: "5000"

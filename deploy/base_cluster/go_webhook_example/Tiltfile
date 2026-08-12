@@ -1,0 +1,99 @@
+# NOTE: I encountered quite a few tilt api issues developing this file, likely due
+# to personal ignorance of best patterns. The primary issue is resolving a
+# a simple build definition requirement that turns out to be a Rube-Goldberg
+# under tilt: specifying the order in which k8s objects are created and applied.
+# To do so I used the pattern, as below, of calling k8s_yaml then defining an
+# corresponding k8s_resource with resource_deps. This file uses a mixture of this
+# idiom, using k8s_resource and its resource_deps to attempt to define build
+# order. This 'works' but I'm hesitant to say it is unbreakable; the underlying
+# semantics of how objects are updated on change (patches vs re-creation) and
+# deconstruction, for instance, are required definition in a real engineering
+# environment. I hate to say it, but tilt isn't very explicit about these,
+# nor are the documents; they play the coy Microsoft game of hiding requirements
+# under the hood which actually need to be made explicit. To give an example,
+# modifying the webhook-controller code causes an image rebuild; one would
+# expect a re-deployment, and ordered deconstruction/re-creation of its downstream
+# dependencies; but the rebuild does not trigger a re-deploy, and instead seems
+# to do a patch (perhaps `kubectl set image` does similar), without rebuilding
+# dependencies. This is efficient. The gist is simply that the efficiency and
+# (non-explicit) semantics can yield unexpected behavior. I dislike it simply
+# because it betrays programmer expectations in order to be clever. The purpose
+# of the language should be to make explicit the relationships of objects in its
+# domain (builds and artifacts), not conceal them.
+
+# Run builds serially. See, the side effects of parallelism are not well-known,
+# hence this protects us from voodoo magic, bad joojoo, and bridge trolls.
+update_settings(max_parallel_updates=1)
+
+
+# Create the namespace and specify a resource for it; the latter must be done since
+# creating a namespace does not create a 'workload'.
+k8s_yaml('./dev/manifests/namespace.yaml')
+k8s_resource(
+    new_name='webhook-namespace', 
+    objects=['webhook-example:Namespace:default'])
+
+
+# Build and deploy the tools container so it always exists, instead of manually.
+docker_build(
+    ref='devregistry:5000/dnsutils',
+    context='../tools_container/',
+    dockerfile='../tools_container/Dockerfile',
+    only='./') # NOTE: 'only' is evaluated relative to the context parameter.
+
+
+# Order note: install the tools container before the webhook to avoid conflicts.
+k8s_yaml(
+    helm(
+        '../tools_container/chart',
+        name='',
+        namespace='webhook-example',
+        values=['../tools_container/chart/values.yaml']
+    )
+)
+k8s_resource(
+    'dns-tools',
+    resource_deps=['webhook-namespace'])
+
+
+# Build the webhook docker image
+docker_build(
+    ref='devregistry:5000/simple-webhook',
+    context='.',
+    dockerfile='./Dockerfile',
+    only='./') # NOTE: 'only' is evaluated relative to the context parameter.
+
+# The kubernetes resources must be created in a specific order, since the
+# deployment of the webhook itself will cause subsequent conflicts with
+# pod/deployment creation as it does its thing. The clean way to resolve this
+# is by having it operate on a separate namespace from its own deployment,
+# I'm just keeping it simple for a straightforward/deletable demo namespace.
+# The required order of creation:
+#   0) create the webhook-example namespace (so the entire example can be deleted)
+#   1) deploy the app stack: secret, then deployment (tilt cannot distinguish the dependency on the secret)
+#   2) deploy the tools container
+#   3) deploy the webhook
+k8s_yaml('./dev/manifests/tls_secret.yaml')
+k8s_resource(
+    new_name='simple-webhook-tls',
+    objects=['simple-webhook-tls:Secret:webhook-example'],
+    resource_deps=['webhook-namespace'])
+k8s_yaml([
+    './dev/manifests/deployment.yaml',
+    './dev/manifests/service.yaml'])
+k8s_resource(
+    'simple-webhook',
+    resource_deps=['simple-webhook-tls'])
+
+
+# Load the mutating-webhook, and create a k8s_resource for it since a resource
+# will not be created by default (since it doesn't run any pods). The resource
+# is required so we can define its build dependency on the webhook-app deployment.
+# The full dep ordering is: webhook-ns <- webhook deployment <- webhook config.
+# Adding the webhook config must be done after deployment.
+k8s_yaml('./dev/manifests/mutating_webhook.yaml')
+k8s_resource(
+    new_name="webhook-config",
+    objects=["simple-webhook.acme.com"],
+    resource_deps=['simple-webhook']
+)
