@@ -21,6 +21,24 @@ Gist:
 - security and attack tree analyses
 
 
+## Feels
+
+Overall, LangGraph and these pythonic frameworks feel opinionated in terms of
+incorporating functionality and layers that should be factored out into separate
+language-agnostic layers, such as secrets, state storage, protocols, etc. The
+graph abstraction is very thin, though descriptive of the ways of modeling
+agentic patterns (ReAct, Reflexion, ToT). However you often see python examples,
+i.e. Lanham's, in which an agent wraps an mcp server or vice versa; this feels
+very odd, because the deployment of the agent and (unsecure!) mcp server seem
+like they ought to be independent. So there are some leaky abstractions, things
+that feel like infrastructure, that are being strongly coupled into the opinions
+of the library. LangSmith might be a good example; why is traceability a
+separate option, when it ought to be standard functionality in code, and
+abstracted in such a way that it can be sent up to any traceability UI? All of
+the big libraries and players seem like this currently, their libraries fill
+some niche but form these oddly overlapping Venn diagrams of mish mush.
+
+
 
 References:
 * [flow](https://www.youtube.com/watch?v=C5ealSUWPxY&list=RDC5ealSUWPxY&start_radio=1&pp=ygUUcmFtamFtIHNsb3dlZCByZXZlcmKgBwE%3D)
