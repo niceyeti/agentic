@@ -3,4 +3,3 @@
 **/.kubescape/
 **/bin/
 **.prof
-!/home/jesse/Desktop/llms/agentic/deploy/base_cluster/istio-1.30.3/manifest.yaml
