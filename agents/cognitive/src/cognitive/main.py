@@ -1,10 +1,32 @@
-from agents.agentic.src.agentic.core.multi_agent_travel_workflow import chat_loop
+import asyncio
+
+from cognitive.cognitive_workflow import run_cognitive_loop
+
+
+async def main():
+    print("=" * 60)
+    print("COGNITIVE AGENT ARCHITECTURE")
+    print("=" * 60)
+
+    # A query that a flat ReAct agent would get wrong:
+    # The user already tried the standard fix, so the standard
+    # answer is wrong by definition.
+    query = (
+        "A user reports that their deployment pipeline fails "
+        "intermittently, but only during high-traffic periods. "
+        "The standard fix (increasing timeout thresholds) was "
+        "already applied and did not resolve the issue."
+    )
+
+    print(f"\nQuery: {query}\n")
+    response = await run_cognitive_loop(
+        query=query,
+        max_iterations=10,
+        confidence_threshold=0.8,
+        max_cognitive_steps=5,
+    )
+    print(response)
+
 
 if __name__ == "__main__":
-    # FUTURE: in a real/clean application, load config here. This main func was
-    # just to get moving. Config could be built and injected from this level,
-    # though it could also be handled internally by 'workflows'. This project
-    # doesn't have such a production lifecycle, but that's what would be needed
-    # to productionize LangGraph, I just don't know those reqs yet.
-
-    chat_loop()
+    asyncio.run(main())

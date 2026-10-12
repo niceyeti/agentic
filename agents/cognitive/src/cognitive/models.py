@@ -18,9 +18,27 @@ class TaskRepresentation(BaseModel):
     and structure. This is the output of the Perception module."""
 
     task_type: TaskType
-    extracted_entities: list[str] = Field(default_factory=list)
+    extracted_entities: list[str] = Field(default=[])
     complexity_estimate: float = 0.0
-    ambiguities: list[str] = Field(default_factory=list)
+    ambiguities: list[str] = Field(default=[])
+
+
+class PlanOutput(BaseModel):
+    """PlanningOutput is the output of the planning agent."""
+
+    strategy_type: StrategyType
+    sub_goals: list[str] = Field(default_factory=list)
+    alternative_strategies: list[str] = Field(default_factory=list)
+
+
+class EvaluationResult(BaseModel):
+    """Evaluation Result is the output of the evaluation agent."""
+
+    progress_assessment: str
+    consistency_check: bool
+    confidence_delta: float
+    contradictions: list[str] = Field(default=[])
+    recommendations: str
 
 
 class StrategyType(str, Enum):
@@ -39,6 +57,18 @@ class AttentionSignal(str, Enum):
     TASK_COMPLETE = "task_complete"
 
 
+class GateDecision(str, Enum):
+    PRESENT = "present"
+    GATHER_MORE = "gather_more"
+    SIGNAL_UNCERTAINTY = "signal_uncertainty"
+
+
+class KnowledgeBoundary(str, Enum):
+    WITHIN = "within_knowledge"
+    EDGE = "edge_of_knowledge"
+    OUTSIDE = "outside_knowledge"
+
+
 class Finding(BaseModel):
     content: str
     source: str
@@ -50,26 +80,26 @@ class CognitiveWorkspace(BaseModel):
     # Task representation
     raw_query: str = ""
     task_type: TaskType = TaskType.UNKNOWN
-    extracted_entities: list[str] = Field(default_factory=list)
+    extracted_entities: list[str] = Field(default=[])
     complexity_estimate: float = 0.0  # 0.0 (trivial) to 1.0 (highly complex)
-    ambiguities: list[str] = Field(default_factory=list)
+    ambiguities: list[str] = Field(default=[])
 
     # Active hypotheses
     current_strategy: StrategyType = StrategyType.DIRECT
-    sub_goals: list[str] = Field(default_factory=list)
-    alternative_strategies: list[str] = Field(default_factory=list)
+    sub_goals: list[str] = Field(default=[])
+    alternative_strategies: list[str] = Field(default=[])
 
     # Intermediate results
-    findings: list[Finding] = Field(default_factory=list)
-    memory_hits: list[str] = Field(default_factory=list)
+    findings: list[Finding] = Field(default=[])
+    memory_hits: list[str] = Field(default=[])
 
     # Confidence state
     confidence: float = 0.5  # Starts neutral, moves toward 1.0 or 0.0
-    confidence_trend: list[float] = Field(default_factory=list)
+    confidence_trend: list[float] = Field(default=[])
 
     # Execution history
-    steps_taken: list[str] = Field(default_factory=list)
-    failed_approaches: list[str] = Field(default_factory=list)
+    steps_taken: list[str] = Field(default=[])
+    failed_approaches: list[str] = Field(default=[])
     iteration_count: int = 0
 
     # Attention signals

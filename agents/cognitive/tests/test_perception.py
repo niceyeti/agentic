@@ -1,11 +1,19 @@
+import os
+
+import pytest
+
 from agents import Runner, set_default_openai_client
 from openai import AsyncOpenAI
 
-from cognitive.perception import perception_agent
+from cognitive.agents import perception_agent
 from cognitive.util.util import load_from_cred_dict
 
 
 # This is merely a manual test, requiring user input.
+@pytest.mark.skipif(
+    "PERCEPTION" not in os.environ,
+    reason="Skipping perception test. Set PERCEPTION environment var to run.",
+)
 def test_perception_agent():
 
     print("""
