@@ -28,10 +28,10 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 from langgraph.errors import GraphRecursionError
 
-from agentic.services.weather import WeatherForecastService
-from agentic.services.bnb import BnBBookingService
-from agentic.stores.travel_info import get_travel_info_retriever
-from agentic.util.util import load_cred
+from agents.agentic.src.agentic.services.weather import WeatherForecastService
+from agents.agentic.src.agentic.services.bnb import BnBBookingService
+from agents.agentic.src.agentic.stores.travel_info import get_travel_info_retriever
+from agents.agentic.src.agentic.util.util import load_cred
 
 
 # Note: I like this pattern, as opposed to a class definition. A class

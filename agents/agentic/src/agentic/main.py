@@ -1,4 +1,4 @@
-from agentic.core.multi_agent_travel_workflow import chat_loop
+from agents.agentic.src.agentic.core.multi_agent_travel_workflow import chat_loop
 
 if __name__ == "__main__":
     # FUTURE: in a real/clean application, load config here. This main func was

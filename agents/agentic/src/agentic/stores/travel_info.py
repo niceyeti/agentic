@@ -9,7 +9,7 @@ from langchain_community.document_loaders import AsyncHtmlLoader
 from langchain_community.vectorstores import Chroma
 
 
-from agentic.util.util import load_cred
+from agents.agentic.src.agentic.util.util import load_cred
 
 UK_DESTINATIONS = [
     "Cornwall",
