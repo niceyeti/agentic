@@ -7,6 +7,8 @@ sbom.json
 ./hotel_db/*
 **sqlite
 
+**node_modules/
+
 **.cred
 **.credentials
 **.creds

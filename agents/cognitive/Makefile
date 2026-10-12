@@ -12,6 +12,14 @@ clean:
 	rm -rf .venv
 
 
+.PHONY: install-node-dependencies
+install-node-dependencies:
+	npm init -y
+	npm install @modelcontextprotocol/server-memory@2026.8.31
+	npm install @brave/brave-search-mcp-server@2.1.4
+	npm audit
+
+
 # Initializes .venv and installs all deps.
 .PHONY: install
 install:

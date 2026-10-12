@@ -1,0 +1,19 @@
+{
+  "name": "cognitive",
+  "version": "1.0.0",
+  "description": "This agent implements the cognitive agent described in Lanham's Agents in Action book, chapter 10.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@brave/brave-search-mcp-server": "^2.1.4",
+    "@modelcontextprotocol/server-memory": "^2026.8.31"
+  }
+}

@@ -23,7 +23,7 @@ from .models import (
     StrategyType,
 )
 
-from .agents import (
+from .cognitive_agents import (
     perception_agent,
     evaluation_agent,
     memory_agent,
